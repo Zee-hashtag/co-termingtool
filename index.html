@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Co-Terming Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-light: #e8f0fe;
+            --secondary: #34a853;
+            --text: #202124;
+            --text-light: #5f6368;
+            --border: #dadce0;
+            --background: #f8f9fa;
+            --card-bg: #ffffff;
+            --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            --shadow-hover: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+        
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+        }
+        
+        .calculator-container {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            background: var(--card-bg);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            padding: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .calculator-container {
+                grid-template-columns: 1fr;
+                gap: 0;
+                max-width: 550px;
+            }
+        }
+        
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .input-section, .result-section {
+            padding: 40px;
+        }
+        
+        .input-section {
+            background-color: var(--card-bg);
+        }
+        
+        .result-section {
+            background-color: var(--primary-light);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .input-group {
+            margin-bottom: 30px;
+        }
+        
+        .input-label {
+            display: block;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-light);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .date-container, .month-container {
+            position: relative;
+            width: 100%;
+        }
+        
+        .date-input, .month-select {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.05rem;
+            color: var(--text);
+            background-color: white;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            padding-right: 50px;
+        }
+        
+        .date-input:hover, .month-select:hover {
+            border-color: var(--primary);
+        }
+        
+        .date-input:focus, .month-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
+        }
+        
+        .date-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            pointer-events: none;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 35px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            font-size: 1.05rem;
+            font-weight: 500;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0d62d9;
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: white;
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #f5f5f5;
+            border-color: var(--text-light);
+        }
+        
+        .result-display {
+            text-align: center;
+        }
+        
+        .result-value {
+            font-size: 4.5rem;
+            font-weight: 300;
+            color: var(--primary);
+            margin-bottom: 15px;
+            line-height: 1;
+        }
+        
+        .result-description {
+            font-size: 1.2rem;
+            color: var(--text);
+            line-height: 1.5;
+        }
+        
+        /* Calendar Styles */
+        .calendar-popup {
+            position: fixed;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            box-shadow: var(--shadow-hover);
+            z-index: 10000;
+            display: none;
+            padding: 30px;
+            width: 420px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            color: var(--text);
+            padding: 0 5px;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            justify-items: center;
+        }
+        
+        .calendar-day {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+        
+        .calendar-day:hover {
+            background-color: var(--primary-light);
+        }
+        
+        .calendar-day.selected {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .calendar-day-header {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        /* Month Selector Styles */
+        .month-popup {
+            position: fixed;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            box-shadow: var(--shadow-hover);
+            z-index: 10000;
+            display: none;
+            padding: 30px;
+            width: 440px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            justify-items: center;
+        }
+        
+        .month-option {
+            width: 90px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 500;
+            border: 2px solid var(--border);
+            font-size: 0.95rem;
+            padding: 8px 4px;
+            transition: all 0.2s;
+            line-height: 1.2;
+            background: white;
+        }
+        
+        .month-option:hover {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+        
+        .month-option.selected {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .tab-group {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-light);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            color: var(--primary);
+        }
+        
+        .tab.active {
+            color: var(--primary);
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--primary);
+        }
+        
+        .calendar-day.today {
+            background-color: #e8f0fe;
+            font-weight: bold;
+        }
+        
+        .month-select {
+            cursor: pointer;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: none;
+        }
+        
+        .calendar-month-year {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text);
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .calendar-month-year select {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 1.05rem;
+            min-width: 100px;
+        }
+        
+        .nav-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--primary);
+            font-size: 1.4rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        
+        .nav-btn:hover {
+            background-color: var(--primary-light);
+        }
+        
+        .calendar-day.empty {
+            visibility: hidden;
+        }
+        
+        .month-option span {
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .error-message {
+            color: #d93025;
+            background-color: #fce8e6;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            display: none;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator-container">
+        <!-- Input Section -->
+        <div class="input-section">
+            <h2 class="section-title">Inputs</h2>
+            
+            <div class="tab-group">
+                <button class="tab active" data-tab="general">General MPSA</button>
+                <button class="tab" data-tab="ea">EA/SCE/ESA</button>
+                <button class="tab" data-tab="renewal">MPSA Renewal</button>
+            </div>
+            
+            <!-- General MPSA Tab -->
+            <div id="general-tab" class="tab-content active">
+                <div class="input-group">
+                    <label class="input-label">Quote Date (Day & Month)</label>
+                    <div class="date-container">
+                        <input type="text" class="date-input" id="general-quote-date" value="" readonly placeholder="Select date">
+                        <div class="date-icon">
+                            <i class="far fa-calendar-alt"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Anniversary Month</label>
+                    <div class="month-container">
+                        <input type="text" class="month-select" id="general-anniversary-month" value="" readonly placeholder="Select month">
+                        <div class="date-icon">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="error-message" id="general-error"></div>
+            </div>
+            
+            <!-- EA/SCE/ESA Tab -->
+            <div id="ea-tab" class="tab-content">
+                <div class="input-group">
+                    <label class="input-label">Quote Date</label>
+                    <div class="date-container">
+                        <input type="text" class="date-input" id="ea-quote-date" value="" readonly placeholder="Select date">
+                        <div class="date-icon">
+                            <i class="far fa-calendar-alt"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Anniversary Month</label>
+                    <div class="month-container">
+                        <input type="text" class="month-select" id="ea-anniversary-month" value="" readonly placeholder="Select month">
+                        <div class="date-icon">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="error-message" id="ea-error"></div>
+            </div>
+            
+            <!-- MPSA Renewal Tab -->
+            <div id="renewal-tab" class="tab-content">
+                <div class="input-group">
+                    <label class="input-label">Quote Month</label>
+                    <div class="month-container">
+                        <input type="text" class="month-select" id="renewal-quote-month" value="" readonly placeholder="Select month">
+                        <div class="date-icon">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Anniversary Month</label>
+                    <div class="month-container">
+                        <input type="text" class="month-select" id="renewal-anniversary-month" value="" readonly placeholder="Select month">
+                        <div class="date-icon">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="error-message" id="renewal-error"></div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-primary" id="share-btn">
+                    <i class="fas fa-share-alt"></i> Share
+                </button>
+                <button class="btn btn-secondary" id="reset-btn">
+                    <i class="fas fa-redo"></i> Reset
+                </button>
+            </div>
+        </div>
+        
+        <!-- Result Section -->
+        <div class="result-section">
+            <h2 class="section-title">Results</h2>
+            
+            <div class="result-display">
+                <div class="result-value" id="result-value">--</div>
+                <div class="result-description" id="result-description">
+                    Select dates to calculate
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay for modal popups -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Calendar Popup -->
+    <div id="calendar-popup" class="calendar-popup"></div>
+    
+    <!-- Month Popup -->
+    <div id="month-popup" class="month-popup"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initCalculator();
+            // Run tests for General MPSA with new adjacent month rules
+            setTimeout(() => {
+                testGeneralMPSARules();
+            }, 1000);
+        });
+        
+        function testGeneralMPSARules() {
+            console.log("=== TESTING UPDATED GENERAL MPSA RULES ===");
+            console.log("Testing adjacent month scenarios:");
+            
+            const tests = [
+                // Adjacent month tests with new rules
+                { quote: "01/01/2026", anniversary: "February", expected: 25, description: "1st Jan ? Feb (quote on 1st)" },
+                { quote: "02/01/2026", anniversary: "February", expected: 36, description: "2nd Jan ? Feb (quote on 2nd)" },
+                { quote: "15/01/2026", anniversary: "February", expected: 36, description: "15th Jan ? Feb (quote after 1st)" },
+                { quote: "01/04/2026", anniversary: "May", expected: 25, description: "1st Apr ? May (quote on 1st)" },
+                { quote: "20/04/2026", anniversary: "May", expected: 36, description: "20th Apr ? May (quote after 1st)" },
+                { quote: "01/12/2026", anniversary: "January", expected: 25, description: "1st Dec ? Jan (quote on 1st, year rollover)" },
+                { quote: "15/12/2026", anniversary: "January", expected: 36, description: "15th Dec ? Jan (quote after 1st, year rollover)" },
+                
+                // Other scenarios (should remain unchanged)
+                { quote: "01/03/2026", anniversary: "March", expected: 36, description: "1st Mar ? Mar (same month, quote on 1st)" },
+                { quote: "15/03/2026", anniversary: "March", expected: 35, description: "15th Mar ? Mar (same month, quote after 1st)" },
+                { quote: "01/06/2026", anniversary: "September", expected: 28, description: "1st Jun ? Sep (3 months between)" },
+                { quote: "15/06/2026", anniversary: "September", expected: 27, description: "15th Jun ? Sep (3 months between, quote after 1st)" },
+            ];
+            
+            let passed = 0;
+            let failed = 0;
+            
+            console.log("\nTesting General MPSA Calculations:");
+            console.log("===================================");
+            
+            tests.forEach(test => {
+                const quoteDate = parseUKDate(test.quote);
+                const result = calculateGeneralMPSA(quoteDate, test.anniversary);
+                const passedTest = result === test.expected;
+                
+                if (passedTest) {
+                    passed++;
+                    console.log(`? ${test.description}: ${result} months total`);
+                } else {
+                    failed++;
+                    console.log(`? ${test.description}: Expected ${test.expected}, Got ${result}`);
+                }
+            });
+            
+            console.log("\n===================================");
+            console.log(`Results: ${passed} passed, ${failed} failed`);
+            console.log("===================================");
+        }
+        
+        function initCalculator() {
+            // Set up tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Update active tab
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show active content
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(`${this.dataset.tab}-tab`).classList.add('active');
+                    
+                    // Clear any errors
+                    clearErrors();
+                    
+                    // Calculate based on active tab
+                    calculateTerm();
+                });
+            });
+            
+            // Set up date input for General tab (quote date only)
+            setupDateInput('general-quote-date');
+            
+            // Set up month input for General tab (anniversary month)
+            setupMonthInput('general-anniversary-month');
+            
+            // Set up date input for EA tab (quote date only)
+            setupDateInput('ea-quote-date');
+            
+            // Set up month input for EA tab (anniversary month)
+            setupMonthInput('ea-anniversary-month');
+            
+            // Set up month inputs for Renewal tab
+            setupMonthInput('renewal-quote-month');
+            setupMonthInput('renewal-anniversary-month');
+            
+            // Set up buttons
+            document.getElementById('share-btn').addEventListener('click', shareResults);
+            document.getElementById('reset-btn').addEventListener('click', resetCalculator);
+            
+            // Calculate on any input change
+            document.querySelectorAll('.date-input, .month-select').forEach(input => {
+                input.addEventListener('change', calculateTerm);
+            });
+        }
+        
+        let currentInput = null;
+        const currentYear = 2026; // Default year
+        
+        function setupDateInput(inputId) {
+            const input = document.getElementById(inputId);
+            
+            // Input click opens calendar
+            input.addEventListener('click', function(e) {
+                e.stopPropagation();
+                currentInput = this;
+                openCalendar(this);
+            });
+        }
+        
+        function setupMonthInput(inputId) {
+            const input = document.getElementById(inputId);
+            
+            // Input click opens month popup
+            input.addEventListener('click', function(e) {
+                e.stopPropagation();
+                currentInput = this;
+                openMonthPopup(this);
+            });
+        }
+        
+        function openCalendar(inputElement) {
+            // Show overlay
+            const overlay = document.getElementById('overlay');
+            overlay.style.display = 'block';
+            
+            // Get calendar popup
+            const calendar = document.getElementById('calendar-popup');
+            
+            // Display calendar
+            calendar.style.display = 'block';
+            
+            // Render calendar starting from 2026
+            const currentDate = parseUKDate(inputElement.value) || new Date(currentYear, 0, 1);
+            if (currentDate.getFullYear() < currentYear) {
+                currentDate.setFullYear(currentYear);
+            }
+            renderCalendar(calendar, currentDate, inputElement);
+            
+            // Close calendar when clicking overlay
+            overlay.onclick = function() {
+                closeAllPopups();
+            };
+        }
+        
+        function openMonthPopup(inputElement) {
+            // Show overlay
+            const overlay = document.getElementById('overlay');
+            overlay.style.display = 'block';
+            
+            // Get month popup
+            const monthPopup = document.getElementById('month-popup');
+            
+            // Display popup
+            monthPopup.style.display = 'block';
+            
+            // Render month grid
+            renderMonthGrid(monthPopup, inputElement.value);
+            
+            // Close popup when clicking overlay
+            overlay.onclick = function() {
+                closeAllPopups();
+            };
+        }
+        
+        function closeAllPopups() {
+            const overlay = document.getElementById('overlay');
+            const calendar = document.getElementById('calendar-popup');
+            const monthPopup = document.getElementById('month-popup');
+            
+            if (overlay) overlay.style.display = 'none';
+            if (calendar) calendar.style.display = 'none';
+            if (monthPopup) monthPopup.style.display = 'none';
+        }
+        
+        function renderMonthGrid(popupElement, currentMonth) {
+            const monthNames = ["January", "February", "March", "April", "May", "June", 
+                              "July", "August", "September", "October", "November", "December"];
+            
+            let monthHTML = '<div class="month-grid">';
+            
+            monthNames.forEach((month, index) => {
+                let monthClass = "month-option";
+                if (month === currentMonth) {
+                    monthClass += " selected";
+                }
+                monthHTML += `<div class="${monthClass}" data-month="${index}"><span>${month}</span></div>`;
+            });
+            
+            monthHTML += '</div>';
+            popupElement.innerHTML = monthHTML;
+            
+            // Add event listeners for month selection
+            popupElement.querySelectorAll('.month-option').forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const monthIndex = parseInt(this.getAttribute('data-month'));
+                    const monthName = monthNames[monthIndex];
+                    
+                    if (currentInput) {
+                        currentInput.value = monthName;
+                        closeAllPopups();
+                        calculateTerm();
+                    }
+                });
+            });
+        }
+        
+        function renderCalendar(calendarElement, date, inputElement) {
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const monthNames = ["January", "February", "March", "April", "May", "June", 
+                              "July", "August", "September", "October", "November", "December"];
+            const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Get currently selected date
+            const selectedDate = parseUKDate(inputElement.value);
+            
+            let calendarHTML = `
+                <div class="calendar-header">
+                    <button type="button" class="nav-btn prev-month">‹</button>
+                    <div class="calendar-month-year">
+                        <select id="month-selector">
+            `;
+            
+            // Add month options
+            monthNames.forEach((monthName, index) => {
+                calendarHTML += `<option value="${index}" ${index === month ? 'selected' : ''}>${monthName}</option>`;
+            });
+            
+            calendarHTML += `
+                        </select>
+                        <select id="year-selector">
+            `;
+            
+            // Add year options (2025-2040)
+            for (let y = 2025; y <= 2040; y++) {
+                calendarHTML += `<option value="${y}" ${y === year ? 'selected' : ''}>${y}</option>`;
+            }
+            
+            calendarHTML += `
+                        </select>
+                    </div>
+                    <button type="button" class="nav-btn next-month">›</button>
+                </div>
+                <div class="calendar-grid">
+            `;
+            
+            // Add day headers
+            for (let i = 0; i < 7; i++) {
+                calendarHTML += `<div class="calendar-day-header">${dayNames[i]}</div>`;
+            }
+            
+            // Add empty cells
+            for (let i = 0; i < firstDay; i++) {
+                calendarHTML += `<div class="calendar-day empty"></div>`;
+            }
+            
+            // Add days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayDate = new Date(year, month, day);
+                let dayClass = "calendar-day";
+                
+                // Check if selected
+                if (selectedDate && 
+                    selectedDate.getDate() === day &&
+                    selectedDate.getMonth() === month &&
+                    selectedDate.getFullYear() === year) {
+                    dayClass += " selected";
+                }
+                
+                calendarHTML += `<div class="${dayClass}" data-day="${day}" data-month="${month}" data-year="${year}">${day}</div>`;
+            }
+            
+            calendarHTML += `</div>`;
+            calendarElement.innerHTML = calendarHTML;
+            
+            // Add event listeners for day selection
+            calendarElement.querySelectorAll('.calendar-day:not(.empty)').forEach(dayEl => {
+                dayEl.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const day = parseInt(this.getAttribute('data-day'));
+                    const month = parseInt(this.getAttribute('data-month'));
+                    const year = parseInt(this.getAttribute('data-year'));
+                    
+                    const selectedDate = new Date(year, month, day);
+                    if (currentInput) {
+                        currentInput.value = formatUKDate(selectedDate);
+                        closeAllPopups();
+                        calculateTerm();
+                    }
+                });
+            });
+            
+            // Month and year selector event listeners
+            const monthSelector = calendarElement.querySelector('#month-selector');
+            const yearSelector = calendarElement.querySelector('#year-selector');
+            
+            monthSelector.addEventListener('change', function(e) {
+                e.stopPropagation();
+                const newMonth = parseInt(this.value);
+                const newYear = parseInt(yearSelector.value);
+                const newDate = new Date(newYear, newMonth, 1);
+                renderCalendar(calendarElement, newDate, currentInput);
+            });
+            
+            yearSelector.addEventListener('change', function(e) {
+                e.stopPropagation();
+                const newMonth = parseInt(monthSelector.value);
+                const newYear = parseInt(this.value);
+                const newDate = new Date(newYear, newMonth, 1);
+                renderCalendar(calendarElement, newDate, currentInput);
+            });
+            
+            // Month navigation
+            calendarElement.querySelector('.prev-month').addEventListener('click', function(e) {
+                e.stopPropagation();
+                let prevMonth = month - 1;
+                let prevYear = year;
+                if (prevMonth < 0) {
+                    prevMonth = 11;
+                    prevYear = year - 1;
+                }
+                const prevDate = new Date(prevYear, prevMonth, 1);
+                renderCalendar(calendarElement, prevDate, currentInput);
+            });
+            
+            calendarElement.querySelector('.next-month').addEventListener('click', function(e) {
+                e.stopPropagation();
+                let nextMonth = month + 1;
+                let nextYear = year;
+                if (nextMonth > 11) {
+                    nextMonth = 0;
+                    nextYear = year + 1;
+                }
+                const nextDate = new Date(nextYear, nextMonth, 1);
+                renderCalendar(calendarElement, nextDate, currentInput);
+            });
+        }
+        
+        function calculateTerm() {
+            const activeTab = document.querySelector('.tab.active').dataset.tab;
+            
+            let resultMonths = 0;
+            let description = "";
+            
+            if (activeTab === 'general') {
+                const quoteDateStr = document.getElementById('general-quote-date').value;
+                const anniversaryMonthStr = document.getElementById('general-anniversary-month').value;
+                
+                const quoteDate = parseUKDate(quoteDateStr);
+                
+                // Validate
+                if (!quoteDate || !anniversaryMonthStr) {
+                    showError('general-error', 'Please select quote date and anniversary month');
+                    updateResult('--', 'Please select inputs');
+                    return;
+                }
+                
+                resultMonths = calculateGeneralMPSA(quoteDate, anniversaryMonthStr);
+                const year3Months = resultMonths - 24;
+                description = `The co-term is ${year3Months} month${year3Months !== 1 ? 's' : ''}, giving a total of ${resultMonths} months`;
+                
+            } else if (activeTab === 'ea') {
+                const quoteDateStr = document.getElementById('ea-quote-date').value;
+                const anniversaryMonthStr = document.getElementById('ea-anniversary-month').value;
+                
+                const quoteDate = parseUKDate(quoteDateStr);
+                
+                // Validate
+                if (!quoteDate || !anniversaryMonthStr) {
+                    showError('ea-error', 'Please select quote date and anniversary month');
+                    updateResult('--', 'Please select inputs');
+                    return;
+                }
+                
+                // For EA/SCE/ESA, we need to use the EA calculation logic but with month only
+                resultMonths = calculateEAMonthOnly(quoteDate, anniversaryMonthStr);
+                description = `The co-term is ${resultMonths} month${resultMonths !== 1 ? 's' : ''}`;
+                
+            } else {
+                const quoteMonthStr = document.getElementById('renewal-quote-month').value;
+                const anniversaryMonthStr = document.getElementById('renewal-anniversary-month').value;
+                
+                // Validate months
+                if (!quoteMonthStr || !anniversaryMonthStr) {
+                    showError('renewal-error', 'Please select both months');
+                    updateResult('--', 'Please select months');
+                    return;
+                }
+                
+                resultMonths = calculateRenewal(quoteMonthStr, anniversaryMonthStr);
+                const year3Months = resultMonths - 24;
+                description = `The co-term is ${year3Months} month${year3Months !== 1 ? 's' : ''}, giving a total of ${resultMonths} months`;
+            }
+            
+            // Clear any errors
+            clearErrors();
+            
+            // Update results
+            if (resultMonths > 0) {
+                updateResult(resultMonths, description);
+            } else {
+                updateResult('--', 'Select dates to calculate');
+            }
+        }
+        
+        // ========== CALCULATION FUNCTIONS ==========
+        
+        // UPDATED: General MPSA Calculation with new adjacent month rules
+        function calculateGeneralMPSA(quoteDate, anniversaryMonthStr) {
+            const monthNames = ["January", "February", "March", "April", "May", "June", 
+                              "July", "August", "September", "October", "November", "December"];
+            
+            const quoteDay = quoteDate.getDate();
+            const quoteMonth = quoteDate.getMonth();
+            const annMonth = monthNames.indexOf(anniversaryMonthStr);
+            
+            if (annMonth === -1) return 0;
+            
+            // Calculate months BETWEEN (excluding both)
+            let monthsBetween;
+            
+            if (quoteMonth < annMonth) {
+                monthsBetween = annMonth - quoteMonth - 1;
+            } else if (quoteMonth > annMonth) {
+                monthsBetween = (12 - quoteMonth - 1) + annMonth;
+            } else {
+                monthsBetween = -1; // Same month
+            }
+            
+            let coTermMonths;
+            
+            if (monthsBetween === -1) {
+                // Same month
+                if (quoteDay === 1) {
+                    coTermMonths = 12; // 1st of month ? same month anniversary = 12 months co-term
+                } else {
+                    coTermMonths = 11; // After 1st ? same month anniversary = 11 months co-term
+                }
+            } else if (monthsBetween === 0) {
+                // ADJACENT MONTHS - NEW RULES
+                // If quoting on 1st day of month: 1 month co-term (25 months total)
+                // If quoting on 2nd or later: 12 months co-term (36 months total)
+                if (quoteDay === 1) {
+                    coTermMonths = 1;
+                } else {
+                    coTermMonths = 12;
+                }
+            } else {
+                // Months in between (non-adjacent)
+                coTermMonths = monthsBetween;
+                if (quoteDay === 1) {
+                    coTermMonths += 1; // Add quote month if quoting on 1st
+                }
+            }
+            
+            // Ensure co-term is 1-12
+            coTermMonths = Math.max(1, Math.min(12, coTermMonths));
+            
+            // Total = base (24) + co-term
+            let totalMonths = 24 + coTermMonths;
+            
+            // Ensure total is 25-36
+            totalMonths = Math.max(25, Math.min(36, totalMonths));
+            
+            return totalMonths;
+        }
+        
+        // NEW FUNCTION: EA/SCE/ESA Calculation with month-only anniversary
+        function calculateEAMonthOnly(quoteDate, anniversaryMonthStr) {
+            const quoteDay = quoteDate.getDate();
+            const quoteMonth = quoteDate.getMonth();
+            const quoteYear = quoteDate.getFullYear();
+            
+            const monthNames = ["January", "February", "March", "April", "May", "June", 
+                              "July", "August", "September", "October", "November", "December"];
+            const annMonth = monthNames.indexOf(anniversaryMonthStr);
+            
+            if (annMonth === -1) return 0;
+            
+            // For month-only calculation, we assume anniversary is on the 1st of the month
+            const annDay = 1;
+            
+            // Determine target anniversary year
+            let targetYear = quoteYear;
+            
+            // Check if anniversary in current year is after quote date
+            if (annMonth > quoteMonth || (annMonth === quoteMonth && annDay > quoteDay)) {
+                targetYear = quoteYear;
+            } else {
+                targetYear = quoteYear + 1;
+            }
+            
+            // Calculate month difference (in absolute months)
+            let monthDiff = (targetYear * 12 + annMonth) - (quoteYear * 12 + quoteMonth);
+            
+            // ADJACENT MONTHS RULE: If exactly 1 month apart (April-May, June-July, etc.)
+            if (monthDiff === 1) {
+                return 12; // Adjacent months always give 12 months
+            }
+            
+            // SAME MONTH SPECIAL CASES
+            if (quoteMonth === annMonth && quoteYear === targetYear) {
+                if (quoteDay === 1 && annDay > 1) {
+                    return 12;
+                }
+                if (quoteDay > 1 && annDay === 1) {
+                    return 11;
+                }
+                if (quoteDay > 1 && annDay > 1 && annDay > quoteDay) {
+                    return 12;
+                }
+            }
+            
+            // NON-ADJACENT MONTHS (normal calculation)
+            // Start counting from 0
+            let count = 0;
+            
+            // Rule 1: If quoting on 1st, include quote month
+            if (quoteDay === 1) {
+                count += 1;
+            }
+            
+            // Count months in between (excluding both quote and anniversary months)
+            // monthDiff is the total months between start and end (inclusive of anniversary month)
+            // So months in between = monthDiff - 1 (minus the anniversary month itself)
+            let monthsBetween = monthDiff - 1;
+            if (monthsBetween > 0) {
+                count += monthsBetween;
+            }
+            
+            // Rule 2: If anniversary is NOT on 1st, include anniversary month
+            // Since we're using month-only and assuming 1st, this would be 0
+            // But if we want to simulate that anniversary might not be on 1st, 
+            // we could add a day input or keep this as 0
+            // For now, we'll keep it as 0 since anniversary is assumed to be 1st
+            if (annDay !== 1) {
+                count += 1;
+            }
+            
+            // Ensure result is between 1 and 12
+            return Math.max(1, Math.min(12, count));
+        }
+        
+        // MPSA Renewal Calculation - UNCHANGED
+        function calculateRenewal(quoteMonthStr, anniversaryMonthStr) {
+            const monthNames = ["January", "February", "March", "April", "May", "June", 
+                              "July", "August", "September", "October", "November", "December"];
+            
+            const quoteMonth = monthNames.indexOf(quoteMonthStr);
+            const annMonth = monthNames.indexOf(anniversaryMonthStr);
+            
+            if (quoteMonth === -1 || annMonth === -1) return 0;
+            
+            // Calculate months BETWEEN (excluding both)
+            let monthsBetween;
+            
+            if (quoteMonth < annMonth) {
+                monthsBetween = annMonth - quoteMonth - 1;
+            } else if (quoteMonth > annMonth) {
+                monthsBetween = (12 - quoteMonth - 1) + annMonth;
+            } else {
+                monthsBetween = -1; // Same month
+            }
+            
+            let coTermMonths;
+            
+            if (monthsBetween === -1) {
+                // Same month
+                coTermMonths = 11;
+            } else if (monthsBetween === 0) {
+                // Adjacent months
+                coTermMonths = 12;
+            } else {
+                // Months in between
+                coTermMonths = monthsBetween;
+            }
+            
+            // Ensure co-term is 1-12
+            coTermMonths = Math.max(1, Math.min(12, coTermMonths));
+            
+            // Total = base (24) + co-term
+            let totalMonths = 24 + coTermMonths;
+            
+            // Ensure total is 25-36
+            totalMonths = Math.max(25, Math.min(36, totalMonths));
+            
+            return totalMonths;
+        }
+        
+        function updateResult(value, description, isError = false) {
+            const resultValue = document.getElementById('result-value');
+            const resultDesc = document.getElementById('result-description');
+            
+            if (isError) {
+                resultValue.textContent = "Error";
+                resultValue.style.color = "#ea4335";
+                resultDesc.textContent = description;
+                resultDesc.style.color = "#ea4335";
+            } else {
+                resultValue.textContent = value;
+                resultValue.style.color = "var(--primary)";
+                resultDesc.textContent = description;
+                resultDesc.style.color = "var(--text)";
+            }
+        }
+        
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+        
+        function clearErrors() {
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.style.display = 'none';
+                el.textContent = '';
+            });
+        }
+        
+        function shareResults() {
+            const resultValue = document.getElementById('result-value').textContent;
+            const resultDescription = document.getElementById('result-description').textContent;
+            const activeTab = document.querySelector('.tab.active').textContent;
+            
+            if (resultValue === '--') {
+                alert('Please select dates first');
+                return;
+            }
+            
+            let inputDetails = '';
+            if (activeTab.includes('General')) {
+                inputDetails = `Quote Date: ${document.getElementById('general-quote-date').value}, Anniversary Month: ${document.getElementById('general-anniversary-month').value}`;
+            } else if (activeTab.includes('EA')) {
+                inputDetails = `Quote Date: ${document.getElementById('ea-quote-date').value}, Anniversary Month: ${document.getElementById('ea-anniversary-month').value}`;
+            } else {
+                inputDetails = `Quote Month: ${document.getElementById('renewal-quote-month').value}, Anniversary Month: ${document.getElementById('renewal-anniversary-month').value}`;
+            }
+            
+            const shareText = `Co-Terming Calculator Result\n\n` +
+                            `Calculation Type: ${activeTab}\n` +
+                            `${inputDetails}\n` +
+                            `Result: ${resultValue} months\n` +
+                            `Details: ${resultDescription}\n\n` +
+                            `Calculated on: ${new Date().toLocaleDateString()}`;
+            
+            if (navigator.share && navigator.canShare) {
+                try {
+                    navigator.share({
+                        title: 'Co-Terming Calculator Result',
+                        text: shareText
+                    });
+                } catch (err) {
+                    copyToClipboard(shareText);
+                }
+            } else {
+                copyToClipboard(shareText);
+            }
+        }
+        
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                alert('Results copied to clipboard!');
+            }).catch(function(err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Results copied to clipboard!');
+            });
+        }
+        
+        function resetCalculator() {
+            // Reset all inputs to empty/blank
+            document.getElementById('general-quote-date').value = '';
+            document.getElementById('general-anniversary-month').value = '';
+            document.getElementById('ea-quote-date').value = '';
+            document.getElementById('ea-anniversary-month').value = '';
+            document.getElementById('renewal-quote-month').value = '';
+            document.getElementById('renewal-anniversary-month').value = '';
+            
+            // Clear errors
+            clearErrors();
+            
+            // Close popups
+            closeAllPopups();
+            
+            // Reset results to zero/empty
+            updateResult('--', 'Select dates to calculate');
+        }
+        
+        // UK Date format functions
+        function formatUKDate(date) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+        
+        function parseUKDate(dateString) {
+            if (!dateString) return null;
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1;
+                const year = parseInt(parts[2], 10);
+                
+                const date = new Date(year, month, day);
+                if (date.getDate() === day && date.getMonth() === month && date.getFullYear() === year) {
+                    return date;
+                }
+            }
+            return null;
+        }
+    </script>
+</body>
+</html>
